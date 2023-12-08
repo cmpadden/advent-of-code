@@ -79,7 +79,6 @@ AAA = (BBB, BBB)
 BBB = (AAA, ZZZ)
 ZZZ = (ZZZ, ZZZ)"""
 
-
 input = open('input.txt').read()
 
 move_sequence, paths = input.split('\n\n')
@@ -109,6 +108,126 @@ while searching:
 
 counter
 # 18673
+
+```
+
+## Part 2
+
+The sandstorm is upon you and you aren't any closer to escaping the wasteland. You had
+the camel follow the instructions, but you've barely left your starting position. It's
+going to take significantly more steps to escape!
+
+What if the map isn't for people - what if the map is for ghosts? Are ghosts even bound
+by the laws of spacetime? Only one way to find out.
+
+After examining the maps a bit longer, your attention is drawn to a curious fact: the
+number of nodes with names ending in A is equal to the number ending in Z! If you were a
+ghost, you'd probably just start at every node that ends with A and follow all of the
+paths at the same time until they all simultaneously end up at nodes that end with Z.
+
+For example:
+
+```
+LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)
+```
+
+Here, there are two starting nodes, 11A and 22A (because they both end with A). As you
+follow each left/right instruction, use that instruction to simultaneously navigate away
+from both nodes you're currently on. Repeat this process until all of the nodes you're
+currently on end with Z. (If only some of the nodes you're on end with Z, they act like
+any other node and you continue as normal.) In this example, you would proceed as
+follows:
+
+- Step 0: You are at 11A and 22A.
+- Step 1: You choose all of the left paths, leading you to 11B and 22B.
+- Step 2: You choose all of the right paths, leading you to 11Z and 22C.
+- Step 3: You choose all of the left paths, leading you to 11B and 22Z.
+- Step 4: You choose all of the right paths, leading you to 11Z and 22B.
+- Step 5: You choose all of the left paths, leading you to 11B and 22C.
+- Step 6: You choose all of the right paths, leading you to 11Z and 22Z.
+
+So, in this example, you end up entirely on nodes that end in Z after 6 steps.
+
+Simultaneously start on every node that ends with A. How many steps does it take before
+you're only on nodes that end with Z?
+
+
+### Solution
+
+```python
+
+# Create a map of all starting points, and a boolean of if this starting point has
+# reached a destination that ends in a Z. Only mark the process as complete when all
+# values in this dictionary are True.
+
+input = """\
+LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)
+"""
+
+import re
+import math
+
+input = open('input.txt').read()
+
+move_sequence, paths = input.split('\n\n')
+
+pattern = r'([\w]{3}) = \(([\w]{3}), ([\w]{3})\)'
+
+paths_parsed = [re.findall(pattern, path)[0] for path in paths.split('\n') if path]
+
+# Example:
+# {
+#     'AAA': ('BBB', 'CCC'),
+#     'BBB': ('DDD', 'EEE'),
+#     ...
+# }
+path_lookup = {location: (l, r) for (location, l, r) in paths_parsed}
+
+# Find the number of steps for each path, and then determine the smallest number that is
+# divisible by all numbers
+
+results = { }
+for location in path_lookup.keys():
+    if location.endswith('A'):
+        searching = True
+        counter = 0
+        while searching:
+            for direction in move_sequence:
+                counter += 1
+                index = 0 if direction == 'L' else 1
+                location = path_lookup[location][index]
+                if location.endswith('Z'):
+                    searching = False
+        results[location] = counter
+
+
+numbers = list(results.values())
+
+lcm = numbers[0]
+for num in numbers[1:]:
+    lcm = lcm * num // math.gcd(lcm, num)
+
+lcm
+
+# 17972669116327
 
 ```
 
