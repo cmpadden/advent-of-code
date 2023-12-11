@@ -133,8 +133,6 @@ To play, please identify yourself via one of these services:
 
 import itertools
 
-
-
 # Iterate through list in reverse, and insert the expanded rows into the universe; this
 # is to prevent indexing issues.
 
@@ -191,5 +189,70 @@ pairs = itertools.combinations(coordinates, 2)
 distances = [distance(coord1, coord2) for coord1, coord2 in pairs]
 
 sum(distances)
+
+# 9686930
+
+```
+
+## Part 2
+
+The galaxies are much older (and thus much farther apart) than the researcher initially
+estimated.
+
+Now, instead of the expansion you did before, make each empty row or column one million
+times larger. That is, each empty row should be replaced with 1000000 empty rows, and
+each empty column should be replaced with 1000000 empty columns.
+
+(In the example above, if each empty row or column were merely 10 times larger, the sum
+of the shortest paths between every pair of galaxies would be 1030. If each empty row or
+column were merely 100 times larger, the sum of the shortest paths between every pair of
+galaxies would be 8410. However, your universe will need to expand far beyond these
+values.)
+
+Starting with the same initial image, expand the universe according to these new rules,
+then find the length of the shortest path between every pair of galaxies. What is the
+sum of these lengths?
+
+### Solution
+
+```python
+
+# NOTE - expanding the grid, and transposing, are too inefficient as we scale the number
+# of empty spaces between each start. Instead, we can keep track of the locations of
+# these rows, and use them as a multiplier in our distance calculation.
+
+import itertools
+
+input = open('input.txt').read()
+
+rows: list[list[str]] = [list(row) for row in input.split('\n') if row]
+
+empty_row_ixs = set()
+for y, row in enumerate(rows):
+    if all([square == '.' for square in row]):
+        empty_row_ixs.add(y)
+
+empty_col_ixs = set()
+for x in range(len(rows[0]) - 1):
+    if all([rows[y][x] == '.' for y in range(len(rows) - 1)]):
+        empty_col_ixs.add(x)
+
+coordinates = []
+for y, row in enumerate(rows):
+    for x, c in enumerate(row):
+        if c == '#':
+            coordinates.append((x, y))
+
+pairs = list(itertools.combinations(coordinates, 2))
+
+# Determine the intersection of sets for the empty column / rows, and the column and
+# rows between the two stars. If there are any present (via `len` then multiply by
+# by our expansion multiplier.
+sum = 0
+for (x1, y1), (x2, y2) in pairs:
+    x1, x2 = min(x1, x2), max(x1, x2)
+    y1, y2 = min(y1, y2), max(y1, y2)
+    sum += (x2 - x1) + len(empty_col_ixs & set(range(x1, x2 + 1))) * 999999
+    sum += (y2 - y1) + len(empty_row_ixs & set(range(y1, y2 + 1))) * 999999
 
 ```
