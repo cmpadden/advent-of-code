@@ -21,8 +21,7 @@ In short: if you move the rocks, you can focus the dish. The platform even has a
 panel on the side that lets you tilt it in one of four directions! The rounded rocks (O)
 will roll when the platform is tilted, while the cube-shaped rocks (#) will stay in
 place. You note the positions of all of the empty spaces (.) and rocks (your puzzle
-                                                                        input). For
-example:
+input). For example:
 
 ```
 O....#....
@@ -80,13 +79,9 @@ example, the total load is 136.
 Tilt the platform so that the rounded rocks all roll north. Afterward, what is the total
 load on the north support beams?
 
-## Part 1
-
 ### Solution
 
 ```python
-
-
 
 ex = """\
 O....#....
@@ -120,9 +115,128 @@ def _score(rolled_segment):
     return sum([len(rolled_segment) - i for (i, c) in enumerate(rolled_segment) if c == 'O'])
 
 
-
 ls = open('input.txt').read().split()
 
 sum([_score(_roll_rocks(l)) for l in _t(ls)])
+
+```
+
+
+
+## Part Two
+
+The parabolic reflector dish deforms, but not in a way that focuses the beam. To do
+that, you'll need to move the rocks to the edges of the platform. Fortunately, a button
+on the side of the control panel labeled "spin cycle" attempts to do just that!
+
+Each cycle tilts the platform four times so that the rounded rocks roll north, then
+west, then south, then east. After each tilt, the rounded rocks roll as far as they can
+before the platform tilts in the next direction. After one cycle, the platform will have
+finished rolling the rounded rocks in those four directions in that order.
+
+Here's what happens in the example above after each of the first few cycles:
+
+After 1 cycle:
+
+```
+.....#....
+....#...O#
+...OO##...
+.OO#......
+.....OOO#.
+.O#...O#.#
+....O#....
+......OOOO
+#...O###..
+#..OO#....
+```
+
+After 2 cycles:
+
+```
+.....#....
+....#...O#
+.....##...
+..O#......
+.....OOO#.
+.O#...O#.#
+....O#...O
+.......OOO
+#..OO###..
+#.OOO#...O
+```
+
+After 3 cycles:
+
+```
+.....#....
+....#...O#
+.....##...
+..O#......
+.....OOO#.
+.O#...O#.#
+....O#...O
+.......OOO
+#...O###.O
+#.OOO#...O
+```
+
+This process should work if you leave it running long enough, but you're still worried
+about the north support beams. To make sure they'll survive for a while, you need to
+calculate the total load on the north support beams after 1000000000 cycles.
+
+In the above example, after 1000000000 cycles, the total load on the north support beams
+is 64.
+
+Run the spin cycle for 1000000000 cycles. Afterward, what is the total load on the north
+support beams?
+
+### Solution
+
+```python
+
+def _t(lines: list[str]) -> list[str]:
+    """Tranpose"""
+    return [''.join(l) for l in list(zip(*lines))]
+
+def _r(lines):
+    """Rotate"""
+    return [''.join(row) for row in zip(*lines[::-1])]
+
+
+def _roll(segment):
+    """Roll rocks north until blocking character `#`."""
+    return '#'.join(map(''.join, map(lambda x: sorted(x, reverse=False), segment.split('#'))))
+
+
+def _score(rolled_segment):
+    """Calculate sum of weights for a rock-rolled segment"""
+    return sum([len(rolled_segment) - i for (i, c) in enumerate(rolled_segment) if c == 'O'])
+
+
+ls = open('input.txt').read().split()
+
+# it's possible that the grid may begin to repeat itself; iterate until we find a
+# repeat, and then use that to extrapolate to the state at `cycles` index.
+
+state = []
+current_board = ls
+i, x = 0, 0
+while True:
+    for _ in range(4):
+        current_board = [_roll(l) for l in _r(current_board)]
+    if current_board in state:
+        for row in current_board:
+            print(row)
+        j = state.index(current_board)
+        print('Found loop!', i, j)
+        break
+    state.append(current_board)
+    i += 1
+
+
+offset_at_target = (1_000_000_000 % (i - j)) + j + 1
+
+sum([_score(s) for s in _t(state[offset_at_target])])
 
 ```
