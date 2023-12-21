@@ -98,37 +98,108 @@ def _display_visits(grid, visited):
     for l in copy:
         print(l)
 
+def _traverse(grid, start):
+    mx, my = len(grid[0]), len(grid)
+    visited = set() 
+    queue: list[tuple[int, int, int, int]] = [start]  # (pos_y, pos_x, dir_y, dir_x)
+    while queue:
+        y, x, dy, dx = queue.pop()
+        ny, nx = y + dy, x + dx
+        if (ny, nx, dy, dx) in visited:
+            continue
+        if ny < 0 or ny >= my:
+            continue
+        if nx < 0 or nx >= mx:
+            continue
+        visited.add((ny, nx, dy, dx))
+        tile = grid[ny][nx]
+        if tile == "/":
+            queue += [(ny, nx, -dx, -dy)]
+        elif tile == "\\":
+            queue += [(ny, nx, dx, dy)]
+        elif tile == "|" and dx:
+            queue += [(ny, nx, -1, 0), (ny, nx, 1, 0)]
+        elif tile == "-" and dy:
+            queue += [(ny, nx, 0, -1), (ny, nx, 0, 1)]
+        else:
+            queue.append((ny, nx, dy, dx))
+    return visited
+
 
 grid = open('input.txt').read().strip().split()
 
-mx, my = len(grid[0]), len(grid)
-
-visited = set() 
-queue: list[tuple[int, int, int, int]] = [(0, -1, 0, 1)]  # (pos_y, pos_x, dir_y, dir_x)
-while queue:
-    y, x, dy, dx = queue.pop()
-    ny, nx = y + dy, x + dx
-    if (ny, nx, dy, dx) in visited:
-        continue
-    if ny < 0 or ny >= my:
-        continue
-    if nx < 0 or nx >= mx:
-        continue
-    visited.add((ny, nx, dy, dx))
-    tile = grid[ny][nx]
-    if tile == "/":
-        queue += [(ny, nx, -dx, -dy)]
-    elif tile == "\\":
-        queue += [(ny, nx, dx, dy)]
-    elif tile == "|" and dx:
-        queue += [(ny, nx, -1, 0), (ny, nx, 1, 0)]
-    elif tile == "-" and dy:
-        queue += [(ny, nx, 0, -1), (ny, nx, 0, 1)]
-    else:
-        queue.append((ny, nx, dy, dx))
+visited = _traverse(grid, (0, -1, 0, 1))
 
 len({v[:2] for v in visited})
 
 _display_visits(grid, visited)
+
+```
+
+## Part 2
+
+As you try to work out what might be wrong, the reindeer tugs on your shirt and leads
+you to a nearby control panel. There, a collection of buttons lets you align the
+contraption so that the beam enters from any edge tile and heading away from that edge.
+(You can choose either of two directions for the beam if it starts on a corner; for
+instance, if the beam starts in the bottom-right corner, it can start heading either
+left or upward.)
+
+So, the beam could start on any tile in the top row (heading downward), any tile in the
+bottom row (heading upward), any tile in the leftmost column (heading right), or any
+tile in the rightmost column (heading left). To produce lava, you need to find the
+configuration that energizes as many tiles as possible.
+
+In the above example, this can be achieved by starting the beam in the fourth tile from
+the left in the top row:
+
+```
+.|<2<\....
+|v-v\^....
+.v.v.|->>>
+.v.v.v^.|.
+.v.v.v^...
+.v.v.v^..\
+.v.v/2\\..
+<-2-/vv|..
+.|<<<2-|.\
+.v//.|.v..
+```
+
+Using this configuration, 51 tiles are energized:
+
+```
+.#####....
+.#.#.#....
+.#.#.#####
+.#.#.##...
+.#.#.##...
+.#.#.##...
+.#.#####..
+########..
+.#######..
+.#...#.#..
+```
+
+Find the initial beam configuration that energizes the largest number of tiles; how many
+tiles are energized in that configuration?
+
+### Solution
+
+```python
+
+mx, my = len(grid[0]), len(grid)
+
+for x in range(mx):
+
+m1 = max([len({v[:2] for v in _traverse(grid, (-1, x, 1, 0))}) for x in range(mx)])
+
+m2 = max([len({v[:2] for v in _traverse(grid, (mx, x, -1, 0))}) for x in range(mx)])
+
+m3 = max([len({v[:2] for v in _traverse(grid, (y, -1, 0, 1))}) for y in range(my)])
+
+m4 = max([len({v[:2] for v in _traverse(grid, (y, my, 0, -1))}) for y in range(my)])
+
+max([m1, m2, m3, m4])
 
 ```
