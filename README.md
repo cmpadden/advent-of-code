@@ -1,4 +1,4 @@
-# Advent of Code
+![AOC](https://github.com/cmpadden/advent-of-code/assets/5807118/2c47c9ce-ed7f-4879-a45f-ae74c6e531c3)
 
 ## 2023
 
