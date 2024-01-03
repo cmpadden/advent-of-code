@@ -53,3 +53,33 @@ assert _marker("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw") == 11
 _marker(open('input.txt').read().strip())
 
 # 1093
+
+"""
+
+Part Two
+
+Your device's communication system is correctly detecting packets, but still isn't working. It looks like it also needs to look for messages.
+
+A start-of-message marker is just like a start-of-packet marker, except it consists of 14 distinct characters rather than 4.
+
+Here are the first positions of start-of-message markers for all of the above examples:
+
+mjqjpqmgbljsphdztnvjfqwrcgsmlb: first marker after character 19
+bvwbjplbgvbhsrlpgdmjqwftvncz: first marker after character 23
+nppdvjthqldpwncqszvftbrmjlhg: first marker after character 23
+nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg: first marker after character 29
+zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw: first marker after character 26
+
+How many characters need to be processed before the first start-of-message marker is detected?
+
+"""
+
+def _marker(l, size=14) -> int:
+    for i in range(len(l) - size):
+        s = set(l[i:i+size])
+        if len(s) == size:
+            return i+size
+
+_marker(open('input.txt').read().strip())
+
+# 3534
