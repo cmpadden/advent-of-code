@@ -250,15 +250,6 @@ Simulate your complete hypothetical series of motions. How many positions does t
 
 """
 
-# R 4
-# U 4
-# L 3
-# D 1
-# R 4
-# D 1
-# L 5
-# R 2
-
 MAPPINGS = {
     'R': (1, 0),
     'L': (-1, 0),
@@ -266,12 +257,12 @@ MAPPINGS = {
     'D': (0, -1),
 }
 
-lines = open('ex.txt').read().strip().splitlines()
 
 def _traverse(lines):
     """Traverse grid and yield generator of coordinates of head node.
     """
     hx, hy = 0, 0
+    yield (hx, hy)
     for dir, dis in map(str.split, lines):
         dx, dy = MAPPINGS[dir]
         for _ in range(abs(dx) * int(dis)):
@@ -282,16 +273,58 @@ def _traverse(lines):
             yield (hx, hy)
 
 
-def _plot(coordinates):
+def _plot(cs1, cs2):
     """Displays coordinates as a line on a grid."""
     import matplotlib.pyplot as plt
-    plt.plot(
-        [x for (x, _) in coordinates],
-        [y for (_, y) in coordinates]
+    plt.scatter(
+        [x for (x, _) in cs1],
+        [y for (_, y) in cs1]
+    )
+    plt.scatter(
+        [x + 0.1 for (x, _) in cs2],
+        [y for (_, y) in cs2]
     )
     plt.show()
 
 
-# Given the list of head-node coordinates, determine the position of the trailing node.
+def d(x1, y1, x2, y2):
+    """Distance between two points on X / Y plane."""
+    import math
+    return math.sqrt((y2-y1)**2 + (x2-x1)**2)
 
-_plot(list(_traverse(lines)))
+# def _tail_positions(hs):
+#     """
+#     Only increment `i` when the distance between that and `j` exceeds 2. This indicates
+#     that the tail node needs to be moved to j - 1.
+#     """
+#     for i in range(len(hs)):
+#         for j in range(i + 1, len(hs)):
+#             if d(*hs[i], *hs[j]) >= 2:
+#                 yield hs[j-1]
+#                 # PROBLEM i needs to become j
+#                 i = j
+#                 break
+
+
+def _tail_positions(hs):
+    i, j = 0, 1
+    while True:
+        _d = d(*hs[i], *hs[j])
+        print(i, j, _d)
+        if _d >= 2:
+            yield hs[j-1]
+            i = j - 1
+        j += 1
+        if j >= len(hs):
+            break
+
+
+lines = open('ex.txt').read().strip().splitlines()
+
+lines = open('input.txt').read().strip().splitlines()
+
+hs = list(_traverse(lines))
+
+ts = list(_tail_positions(hs))
+
+len(set(ts2)) + 1  # add one for starting position
