@@ -1,7 +1,8 @@
-![AOC](https://github.com/cmpadden/advent-of-code/assets/5807118/2c47c9ce-ed7f-4879-a45f-ae74c6e531c3)
+# advent-of-code
 
 ## 2024
 
+https://adventofcode.com/2024/
 
  | Su | Mo | Tu | We | Th | Fr | Sa |
  |----|----|----|----|----|----|----|
@@ -11,8 +12,9 @@
  | 22 | 23 | 24 | 25 | 26 | 27 | 28 |
  | 29 | 30 | 31 |    |    |    |    |
 
-
 ## 2023
+
+https://adventofcode.com/2023/
 
  | Su | Mo | Tu | We | Th | Fr | Sa |
  |----|----|----|----|----|----|----|
@@ -24,6 +26,8 @@
  | 31 |    |    |    |    |    |    |
 
 ## 2022
+
+https://adventofcode.com/2022/
 
  | Su | Mo | Tu | We | Th | Fr | Sa |
  |----|----|----|----|----|----|----|
