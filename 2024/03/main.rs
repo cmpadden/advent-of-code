@@ -30,6 +30,37 @@ the results of the multiplications?
 
 */
 
+/*
+--- Part Two ---
+
+As you scan through the corrupted memory, you notice that some of the conditional statements are
+also still intact. If you handle some of the uncorrupted conditional statements in the program, you
+might be able to get an even more accurate result.
+
+There are two new instructions you'll need to handle:
+
+Regex to solve the following:
+
+The do() instruction enables future mul instructions. The don't() instruction disables future mul
+instructions.
+
+Only the most recent do() or don't() instruction applies. At the beginning of the program, mul
+instructions are enabled.
+
+For example:
+
+xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))
+
+This corrupted memory is similar to the example from before, but this time the mul(5,5) and
+mul(11,8) instructions are disabled because there is a don't() instruction before them. The other
+mul instructions function normally, including the one at the end that gets re-enabled by a do()
+instruction.
+
+This time, the sum of the results is 48 (2*4 + 8*5).
+
+Handle the new instructions; what do you get if you add up all of the results of just the enabled
+multiplications?
+*/
 
 /*
 
@@ -38,28 +69,74 @@ cargo run
 */
 
 use regex::Regex;
+use std::fs;
+use std::io::{self};
 
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
+pub fn tally_muls(input: &String) -> i32 {
+    let re = Regex::new(r"mul\((\d{1,3}),(\d{1,3})\)").unwrap();
+    let mut counter = 0;
+    for (_, [a, b]) in re.captures_iter(&input).map(|c| c.extract()) {
+        let ai: i32 = a.parse().unwrap();
+        let bi: i32 = b.parse().unwrap();
+        counter += ai * bi;
+    }
+    counter
+}
 
-fn main() -> io::Result<()> {
-    let file = File::open(Path::new("input.txt"))?;
-    let reader = io::BufReader::new(file);
+pub fn tally_muls_pt2(input: &String) -> i32 {
+    let re_line = Regex::new(r"do\(\)|don't\(\)|mul\((\d{1,3}),(\d{1,3})\)").unwrap();
+    let re_mul = Regex::new(r"mul\((\d{1,3}),(\d{1,3})\)").unwrap();
 
     let mut counter = 0;
-    for line in reader.lines() {
-        let line = line?;
+    let mut enabled = true;
+    for caps in re_line.captures_iter(&input) {
+        let instruction = caps.get(0).unwrap().as_str();
 
-        let re = Regex::new(r"mul\((\d{1,3}),(\d{1,3})\)").unwrap();
-        for (_, [a, b]) in re.captures_iter(&line).map(|c| c.extract()) {
-            let ai: i32 = a.parse().unwrap();
-            let bi: i32 = b.parse().unwrap();
-            counter += ai * bi;
+        match instruction {
+            "do()" => enabled = true,
+            "don't()" => enabled = false,
+            _ => {
+                if enabled {
+                    let mul = caps.get(0).unwrap().as_str();
+                    let caps = re_mul.captures(mul).unwrap();
+                    let a: i32 = caps[1].parse().unwrap();
+                    let b: i32 = caps[2].parse().unwrap();
+                    counter += a * b;
+                }
+            }
         }
     }
+    counter
+}
 
-    println!("p1 {}", counter);
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_pt1() {
+        let input =
+            "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))".to_string();
+        assert_eq!(super::tally_muls(&input), 161);
+    }
+
+    #[test]
+    fn test_pt2() {
+        let input =
+            "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))".to_string();
+        assert_eq!(super::tally_muls_pt2(&input), 48);
+    }
+}
+
+fn main() -> io::Result<()> {
+    let mut counter_pt1 = 0;
+    let mut counter_pt2 = 0;
+
+    let line = fs::read_to_string("input.txt")?;
+
+    counter_pt1 += tally_muls(&line);
+    counter_pt2 += tally_muls_pt2(&line);
+
+    println!("p1 {}", counter_pt1);
+    println!("p2 {}", counter_pt2);
 
     Ok(())
 }
