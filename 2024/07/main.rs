@@ -49,20 +49,86 @@ Determine which equations could possibly be true. What is their total calibratio
 use std::fs;
 use std::io::{self};
 
-fn perms(nums: &[i64], index: usize, current: i64, results: &mut Vec<i64>) {
-    if index == nums.len() {
-        results.push(current);
-        return;
+pub fn p1(input: &str) -> i64 {
+    fn perms(nums: &[i64], index: usize, current: i64, results: &mut Vec<i64>) {
+        if index == nums.len() {
+            results.push(current);
+            return;
+        }
+
+        let next_num = nums[index];
+
+        //println!("{:?}", (nums, index, current, &results));
+        perms(nums, index + 1, current + next_num, results);
+        perms(nums, index + 1, current * next_num, results);
     }
 
-    let next_num = nums[index];
+    let mut ans = 0;
+    for line in input.lines() {
+        println!("{:?}", line);
+        let (left, right) = line.split_once(':').unwrap();
 
-    //println!("{:?}", (nums, index, current, &results));
-    perms(nums, index + 1, current + next_num, results);
-    perms(nums, index + 1, current * next_num, results);
+        let value = left.parse::<i64>().unwrap();
+
+        let nums: Vec<i64> = right
+            .split_whitespace()
+            .filter_map(|s| s.parse().ok())
+            .collect();
+
+        let mut results = Vec::new();
+        perms(&nums, 1, nums[0], &mut results);
+
+        if results.contains(&value) {
+            ans += value;
+        }
+    }
+
+    ans
 }
 
-pub fn p1(input: &str) -> i64 {
+/*
+--- Part Two ---
+
+The engineers seem concerned; the total calibration result you gave them is nowhere close to being
+within safety tolerances. Just then, you spot your mistake: some well-hidden elephants are holding
+a third type of operator.
+
+The concatenation operator (||) combines the digits from its left and right inputs into a single
+number. For example, 12 || 345 would become 12345. All operators are still evaluated left-to-right.
+
+Now, apart from the three equations that could be made true using only addition and multiplication,
+the above example has three more equations that can be made true by inserting operators:
+
+    156: 15 6 can be made true through a single concatenation: 15 || 6 = 156.
+    7290: 6 8 6 15 can be made true using 6 * 8 || 6 * 15.
+    192: 17 8 14 can be made true using 17 || 8 + 14.
+
+Adding up all six test values (the three that could be made before using only + and * plus the new
+three that can now be made by also using ||) produces the new total calibration result of 11387.
+
+Using your new knowledge of elephant hiding spots, determine which equations could possibly be
+true. What is their total calibration result?
+*/
+
+pub fn p2(input: &str) -> i64 {
+    fn perms(nums: &[i64], index: usize, current: i64, results: &mut Vec<i64>) {
+        if index == nums.len() {
+            results.push(current);
+            return;
+        }
+
+        let next_num = nums[index];
+
+        perms(nums, index + 1, current + next_num, results);
+        perms(nums, index + 1, current * next_num, results);
+        perms(
+            nums,
+            index + 1,
+            format!("{}{}", current, next_num).parse::<i64>().unwrap(),
+            results,
+        );
+    }
+
     let mut ans = 0;
     for line in input.lines() {
         println!("{:?}", line);
@@ -104,13 +170,13 @@ mod tests {
     #[test]
     fn test_p1p2() {
         assert_eq!(p1(&INPUT), 3749);
-        //assert_eq!(p2(&INPUT), 6);
+        assert_eq!(p2(&INPUT), 11387);
     }
 }
 
 fn main() -> io::Result<()> {
     let input = fs::read_to_string("input.txt")?;
     println!("p1 {}", p1(&input));
-    //println!("p2 {}", p2(&input));
+    println!("p2 {}", p2(&input));
     Ok(())
 }
