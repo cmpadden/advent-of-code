@@ -49,6 +49,22 @@ Determine which equations could possibly be true. What is their total calibratio
 use std::fs;
 use std::io::{self};
 
+// Example recursion:
+// 
+// perms(nums: &[i64], index: usize, current: i64, results: &mut Vec<i64>)
+// 
+// perms([81, 40, 27], 1, 81, [])
+//     perms([81, 40, 27], 2, 81 + 40, [])
+//         perms([81, 40, 27], 3, 81 + 40 + 27, [])
+//             return
+//         perms([81, 40, 27], 3, 81 + 40 * 27, [])
+//             return
+//     perms([81, 40, 27], 2, 81 * 40, [])
+//         perms([81, 40, 27], 3, 81 * 40 + 27, [])
+//             return
+//         perms([81, 40, 27], 3, 81 * 40 * 27, [])
+//             return
+
 pub fn p1(input: &str) -> i64 {
     fn perms(nums: &[i64], index: usize, current: i64, results: &mut Vec<i64>) {
         if index == nums.len() {
