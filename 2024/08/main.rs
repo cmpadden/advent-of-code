@@ -105,12 +105,11 @@ use std::io::{self};
 // the coordinates of that mirror are in the bounds of the map. Store the coordinate of that
 // "anti-node".
 
-pub fn p1(input: &str) -> usize {
-    let lines: Vec<_> = input.lines().collect();
+fn in_bounds(j: isize, i: isize, h: isize, w: isize) -> bool {
+    i >= 0 && i < w && j >= 0 && j < h
+}
 
-    let h = lines.len() as isize;
-    let w = lines[0].len() as isize;
-
+fn find_nodes(lines: &Vec<&str>) -> HashMap<char, Vec<(usize, usize)>> {
     let mut nodes = HashMap::new();
     for j in 0..lines.len() {
         for i in 0..lines[j].len() {
@@ -121,10 +120,16 @@ pub fn p1(input: &str) -> usize {
             nodes.entry(c).or_insert(Vec::new()).push((j, i));
         }
     }
+    nodes
+}
 
-    fn in_bounds(j: isize, i: isize, h: isize, w: isize) -> bool {
-        i >= 0 && i < w && j >= 0 && j < h
-    }
+pub fn p1(input: &str) -> usize {
+    let lines: Vec<&str> = input.lines().collect();
+
+    let h = lines.len() as isize;
+    let w = lines[0].len() as isize;
+
+    let nodes = find_nodes(&lines);
 
     let mut antinodes: HashSet<(isize, isize)> = HashSet::new();
     for (freq, coords) in &nodes {
@@ -150,7 +155,106 @@ pub fn p1(input: &str) -> usize {
         }
     }
 
-    println!("{:?}", antinodes);
+    antinodes.len()
+}
+
+/*
+--- Part Two ---
+
+Watching over your shoulder as you work, one of The Historians asks if you took the effects of
+resonant harmonics into your calculations.
+
+Whoops!
+
+After updating your model, it turns out that an antinode occurs at any grid position exactly in
+line with at least two antennas of the same frequency, regardless of distance. This means that some
+of the new antinodes will occur at the position of each antenna (unless that antenna is the only
+one of its frequency).
+
+So, these three T-frequency antennas now create many antinodes:
+
+T....#....
+...T......
+.T....#...
+.........#
+..#.......
+..........
+...#......
+..........
+....#.....
+..........
+
+In fact, the three T-frequency antennas are all exactly in line with two antennas, so they are all
+also antinodes! This brings the total number of antinodes in the above example to 9.
+
+The original example now has 34 antinodes, including the antinodes that appear on every antenna:
+
+##....#....#
+.#.#....0...
+..#.#0....#.
+..##...0....
+....0....#..
+.#...#A....#
+...#..#.....
+#....#.#....
+..#.....A...
+....#....A..
+.#........#.
+...#......##
+
+Calculate the impact of the signal using this updated model. How many unique locations within the
+bounds of the map contain an antinode?
+*/
+
+pub fn p2(input: &str) -> usize {
+    let lines: Vec<&str> = input.lines().collect();
+
+    let h = lines.len() as isize;
+    let w = lines[0].len() as isize;
+
+    let nodes = find_nodes(&lines);
+
+    let mut antinodes: HashSet<(isize, isize)> = HashSet::new();
+    for (freq, coords) in &nodes {
+        for x1 in 0..coords.len() {
+            for x2 in 1..coords.len() {
+                // antennas are also antinodes
+                antinodes.insert((coords[x1].0 as isize, coords[x1].1 as isize));
+
+                let (nj1, ni1) = (coords[x1].0 as isize, coords[x1].1 as isize);
+                let (nj2, ni2) = (coords[x2].0 as isize, coords[x2].1 as isize);
+
+                // find antinodes until we reach the boundary of the grid
+                let offset_j = nj2 - nj1;
+                let offset_i = ni2 - ni1;
+
+                if offset_j == 0 && offset_i == 0 {
+                    break;
+                }
+
+                let (mut anj1, mut ani1) = (nj1 - offset_j, ni1 - offset_i);
+                loop {
+                    if !in_bounds(anj1, ani1, h, w) {
+                        break;
+                    } else {
+                        antinodes.insert((anj1, ani1));
+                        (anj1, ani1) = (anj1 - offset_j, ani1 - offset_i);
+                    }
+                }
+
+                let (mut anj2, mut ani2) = (nj2 + offset_j, ni2 + offset_i);
+                loop {
+                    if !in_bounds(anj2, ani2, h, w) {
+                        break;
+                    } else {
+                        antinodes.insert((anj2, ani2));
+                        (anj2, ani2) = (anj2 + offset_j, ani2 + offset_i);
+                    }
+                }
+            }
+        }
+    }
+
     antinodes.len()
 }
 
@@ -175,13 +279,13 @@ mod tests {
     #[test]
     fn test_p1p2() {
         assert_eq!(p1(&INPUT), 14);
-        //assert_eq!(p2(&INPUT), 11387);
+        assert_eq!(p2(&INPUT), 34);
     }
 }
 
 fn main() -> io::Result<()> {
     let input = fs::read_to_string("input.txt")?;
     println!("p1 {}", p1(&input));
-    //println!("p2 {}", p2(&input));
+    println!("p2 {}", p2(&input));
     Ok(())
 }
