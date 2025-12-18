@@ -120,22 +120,144 @@ To repair the teleporter, you first need to understand the beam-splitting proper
 Analyze your manifold diagram. How many times will the beam be split?
 """
 
+import copy
+
 
 def _render(lines):
     for line in lines:
         print(line)
 
 
-lines = open("input-sample.txt").read().split()
-for i in range(len(lines)):
-    if i == 0:
-        continue
-    for j in range(len(lines[i])):
-        if lines[i - 1][j] == "S":
-            lines[i] = lines[i][:j] + "|" + lines[i][j + 1 :]
-        if lines[i][j] == "." and lines[i - 1][j] == "|":
-            lines[i] = lines[i][:j] + "|" + lines[i][j + 1 :]
-        if lines[i][j] == "^" and lines[i - 1][j] == "|":
-            lines[i] = lines[i][: j - 1] + "|" + lines[i][j] + "|" + lines[i][j + 2 :]
+def p1(lines):
+    lines = copy.deepcopy(lines)
+    count = 0
+    for i in range(len(lines)):
+        if i == 0:
+            continue
+        for j in range(len(lines[i])):
+            if lines[i - 1][j] == "S":
+                lines[i] = lines[i][:j] + "|" + lines[i][j + 1 :]
+            if lines[i][j] == "." and lines[i - 1][j] == "|":
+                lines[i] = lines[i][:j] + "|" + lines[i][j + 1 :]
+            if lines[i][j] == "^" and lines[i - 1][j] == "|":
+                lines[i] = (
+                    lines[i][: j - 1] + "|" + lines[i][j] + "|" + lines[i][j + 2 :]
+                )
+                # count distinct splits
+                if lines[i][j] != "|":
+                    count += 1
+    return count, lines
 
-_render(lines)
+
+lines = open("input.txt").read().split()
+
+count, solution = p1(lines)
+
+_render(solution)
+
+count
+
+"""
+--- Part Two ---
+
+With your analysis of the manifold complete, you begin fixing the teleporter. However, as you open the side of the teleporter to replace the broken manifold, you are surprised to discover that it isn't a classical tachyon manifold - it's a quantum tachyon manifold.
+
+With a quantum tachyon manifold, only a single tachyon particle is sent through the manifold. A tachyon particle takes both the left and right path of each splitter encountered.
+
+Since this is impossible, the manual recommends the many-worlds interpretation of quantum tachyon splitting: each time a particle reaches a splitter, it's actually time itself which splits. In one timeline, the particle went left, and in the other timeline, the particle went right.
+
+To fix the manifold, what you really need to know is the number of timelines active after a single particle completes all of its possible journeys through the manifold.
+
+In the above example, there are many timelines. For instance, there's the timeline where the particle always went left:
+
+.......S.......
+.......|.......
+......|^.......
+......|........
+.....|^.^......
+.....|.........
+....|^.^.^.....
+....|..........
+...|^.^...^....
+...|...........
+..|^.^...^.^...
+..|............
+.|^...^.....^..
+.|.............
+|^.^.^.^.^...^.
+|..............
+
+Or, there's the timeline where the particle alternated going left and right at each splitter:
+
+.......S.......
+.......|.......
+......|^.......
+......|........
+......^|^......
+.......|.......
+.....^|^.^.....
+......|........
+....^.^|..^....
+.......|.......
+...^.^.|.^.^...
+.......|.......
+..^...^|....^..
+.......|.......
+.^.^.^|^.^...^.
+......|........
+
+Or, there's the timeline where the particle ends up at the same point as the alternating timeline, but takes a totally different path to get there:
+
+.......S.......
+.......|.......
+......|^.......
+......|........
+.....|^.^......
+.....|.........
+....|^.^.^.....
+....|..........
+....^|^...^....
+.....|.........
+...^.^|..^.^...
+......|........
+..^..|^.....^..
+.....|.........
+.^.^.^|^.^...^.
+......|........
+
+In this example, in total, the particle ends up on 40 different timelines.
+
+Apply the many-worlds interpretation of quantum tachyon splitting to your manifold diagram. In total, how many different timelines would a single tachyon particle end up on?
+"""
+
+import copy
+
+from collections import defaultdict
+
+
+def p2(lines):
+    lines = copy.deepcopy(lines)
+    start_col = lines[0].index("S")
+    timelines = defaultdict(lambda: defaultdict(int))
+    timelines[0][start_col] = 1
+    total_complete = 0
+    for row in range(len(lines)):
+        for col in range(len(lines[row])):
+            count = timelines[row][col]
+            if count == 0:
+                continue
+            next_row = row + 1
+            if next_row >= len(lines):
+                total_complete += count
+                continue
+            next_cell = lines[next_row][col]
+            if next_cell == "." or next_cell == "S":
+                timelines[next_row][col] += count
+            elif next_cell == "^":
+                timelines[next_row][col - 1] += count
+                timelines[next_row][col + 1] += count
+    return total_complete
+
+
+lines = open("input.txt").read().split()
+p2(lines)
