@@ -14,10 +14,7 @@ import requests
 from lxml import html
 
 # Configure logging to show ERROR level and above by default
-logging.basicConfig(
-    level=logging.ERROR,
-    format='%(levelname)s: %(message)s'
-)
+logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 if len(sys.argv) != 4:
@@ -50,13 +47,13 @@ tree = html.fromstring(response.content)
 el_desc = tree.find('.//article[@class="day-desc"]')
 
 with open(f"{_dir}/main.py", "w") as f:
-    f.writelines(
-        [
-            '"""',
-            el_desc.text_content(),
-            '"""',
-        ]
-    )
+    f.write('"""\n')
+    for element in el_desc.xpath(".//p | .//pre | .//h2 | .//ul"):
+        text = element.text_content().strip()
+        if text:
+            f.write(text)
+            f.write("\n\n")
+    f.write('"""')
 
 try:
     response = requests.get(
@@ -70,7 +67,9 @@ try:
         logger.error(f"Status code: {response.status_code}")
         logger.error(f"Response: {response.text[:500]}")
         if response.status_code == 400:
-            logger.error("HINT: This might indicate an invalid or expired session cookie")
+            logger.error(
+                "HINT: This might indicate an invalid or expired session cookie"
+            )
         elif response.status_code == 404:
             logger.error("HINT: The puzzle input might not be available yet")
         sys.exit(1)
